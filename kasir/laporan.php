@@ -2,6 +2,9 @@
 session_start();
 include 'koneksi.php';
 
+// Atur zona waktu sesuai lokasi Anda
+date_default_timezone_set('Asia/Jakarta');
+
 // Hapus transaksi
 if (isset($_GET['hapus'])) {
     $transaksi_id = $_GET['hapus'];
@@ -35,16 +38,24 @@ if (!$result_transaksi) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Transaksi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/style.css">
     <style>
         /* Media print untuk tampilan cetak */
         @media print {
-            .btn, .container {
-                display: none; /* Sembunyikan tombol dan container utama saat cetak */
+            .btn, .sidebar {
+                display: none; /* Sembunyikan tombol dan sidebar saat cetak */
             }
+            body {
+                padding: 0; /* Hilangkan padding saat cetak */
+            }
+        }
+        body {
+            padding-left: 250px; /* Sesuaikan dengan lebar sidebar */
         }
     </style>
 </head>
 <body>
+<?php include 'sidebar.php'; ?>
     <div class="container mt-5">
         <h3>Laporan Transaksi</h3>
 
@@ -62,7 +73,7 @@ if (!$result_transaksi) {
                 <?php while ($transaksi = mysqli_fetch_assoc($result_transaksi)): ?>
                     <tr>
                         <td><?= $transaksi['kode_transaksi']; ?></td>
-                        <td><?= date('d-m-Y H:i', strtotime($transaksi['tanggal'])); ?></td>
+                        <td><?= date('d-m-Y h:i A', strtotime($transaksi['tanggal'])); ?></td>
                         <td>Rp <?= number_format($transaksi['total_harga'], 0, ',', '.'); ?></td>
                         <td>
                             <a href="detail_transaksi.php?id=<?= $transaksi['id']; ?>" class="btn btn-success">Detail</a>
@@ -74,10 +85,11 @@ if (!$result_transaksi) {
             </tbody>
         </table>
 
-        <!-- Tombol Cetak Laporan -->
-        <div class="d-flex justify-content-between mt-3">
-            <a href="dashboard.php" class="btn btn-primary">Kembali ke Dashboard</a>
-            <button class="btn btn-success" onclick="window.print()">Cetak Laporan</button>
+        <!-- Tombol Cetak -->
+        <div class="d-flex justify-content-start mt-3">
+            <form method="POST" action="cetak_laporan.php" target="_blank">
+                <button type="submit" name="cetak" class="btn btn-primary me-2">Cetak Laporan</button>
+            </form>
         </div>
     </div>
 

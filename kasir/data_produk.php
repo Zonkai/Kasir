@@ -9,17 +9,20 @@ include 'koneksi.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Produk</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        body {
+            padding-left: 250px; /* Sesuaikan dengan lebar sidebar */
+        }
+    </style>
 </head>
 <body>
+<?php include 'sidebar.php'; ?>
     <div class="container mt-5">
         <h2>Data Produk</h2>
 
-        <div class="d-flex justify-content-between mt-3">
-            <a href="dashboard.php" class="btn btn-primary">Kembali ke Dashboard</a>
-            
-            <div class="ms-auto">
-                <button class="btn btn-success" onclick="window.print()">Cetak Produk</button>
-            </div>
+        <div class="d-flex justify-content-start mt-3">
+            <a href="tambah_produk.php" class="btn btn-success me-2">Tambah Produk</a>
         </div>
         
         <div class="mt-4">

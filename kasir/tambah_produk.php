@@ -2,11 +2,16 @@
 include 'koneksi.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $kode_produk = $_POST['kode_produk'];
-    $nama_produk = $_POST['nama_produk'];
+    $nama_produk = trim($_POST['nama_produk']);
     $harga = $_POST['harga'];
     $stok = $_POST['stok'];
     
+    // Generate kode produk random unik
+    do {
+        $kode_produk = 'P' . strtoupper(bin2hex(random_bytes(3)));
+        $cek = mysqli_query($koneksi, "SELECT 1 FROM produk WHERE kode_produk = '" . mysqli_real_escape_string($koneksi, $kode_produk) . "' LIMIT 1");
+    } while(mysqli_num_rows($cek) > 0);
+
     // Upload gambar
     $gambar = $_FILES['gambar']['name'];
     $tmp_name = $_FILES['gambar']['tmp_name'];
@@ -29,15 +34,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tambah Produk</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        body {
+            padding-left: 250px; /* Sesuaikan dengan lebar sidebar */
+        }
+    </style>
 </head>
 <body>
+<?php include 'sidebar.php'; ?>
     <div class="container mt-5">
         <h2>Tambah Produk</h2>
         <form action="" method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
+            <!-- <div class="mb-3">
                 <label>Kode Produk</label>
                 <input type="text" name="kode_produk" class="form-control" required>
-            </div>
+            </div> -->
             <div class="mb-3">
                 <label>Nama Produk</label>
                 <input type="text" name="nama_produk" class="form-control" required>

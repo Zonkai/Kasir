@@ -51,9 +51,16 @@ $result_detail = mysqli_query($koneksi, $query_detail);
                 display: none;
             }
         }
+        body {
+            padding-left: 250px; /* Sesuaikan dengan lebar sidebar */
+        }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+<?php include 'sidebar.php'; ?>
+
     <div class="container mt-5">
         <h3>Detail Transaksi - <?= $transaksi['kode_transaksi']; ?></h3>
 
@@ -86,10 +93,6 @@ $result_detail = mysqli_query($koneksi, $query_detail);
                 <?php endwhile; ?>
             </tbody>
         </table>
-
-        <!-- Tombol Cetak Detail Transaksi -->
-        <button class="btn btn-success mt-3" onclick="window.print()">Cetak Detail</button>
-
         <div class="mt-3">
             <a href="laporan.php" class="btn btn-secondary">Kembali ke Laporan</a>
         </div>

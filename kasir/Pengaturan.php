@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Account Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css">
   <style>
     /* Sekadar contoh styling sederhana */
     label {
@@ -19,34 +21,40 @@
       margin-top: 15px;
       padding: 10px 20px;
     }
+    body {
+      padding-left: 250px; /* Sesuaikan dengan lebar sidebar */
+    }
   </style>
 </head>
 <body>
-  <h1>Account Settings</h1>
-  
-  <!-- Form ini mengirim data ke file update_account.php -->
-  <form action="update_account.php" method="POST">
+<?php include 'sidebar.php'; ?>
+  <div class="container mt-5">
+    <h1>Ubah Akun</h1>
     
-    <label for="nama_toko">Nama Toko:</label>
-    <input type="text" id="nama_toko" name="nama_toko" 
-           value="TOKO ALFAMART" required>
+    <!-- Form ini mengirim data ke file update_account.php -->
+    <form action="update_account.php" method="POST" class="mt-4">
+      <div class="mb-3">
+        <label for="nama_toko" class="form-label">Nama Toko:</label>
+        <input type="text" id="nama_toko" name="nama_toko" 
+               value="" class="form-control" required>
+      </div>
 
-    <label for="telepon">Telepon:</label>
-    <input type="text" id="telepon" name="telepon" 
-           value="0852354564" required>
+      <div class="mb-3">
+        <label for="username" class="form-label">Username:</label>
+        <input type="text" id="username" name="username" 
+               value="" class="form-control" required>
+      </div>
 
-    <label for="alamat">Alamat:</label>
-    <textarea id="alamat" name="alamat" rows="3" required>Desa Sukosari Lor Kecamatan Sukosari Kabupaten Bondowoso</textarea>
-    
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" 
-           value="admin" required>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password Baru:</label>
+        <input type="password" id="password" name="password" 
+               value="" class="form-control" required>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+  </div>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" 
-           value="password" required>
-    
-    <button type="submit">Update</button>
-  </form>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

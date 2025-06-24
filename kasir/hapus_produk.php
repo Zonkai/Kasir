@@ -5,36 +5,24 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Mengecek apakah ada parameter kode_produk dalam URL dan session keranjang
-if (isset($_GET['kode_produk']) && isset($_SESSION['keranjang'])) {
-    $kode_produk = $_GET['kode_produk'];
+include 'koneksi.php';
 
-    // Cek apakah ada produk dengan kode tersebut di keranjang
-    $produk_ditemukan = false; // Flag untuk mengecek apakah produk ditemukan
-    foreach ($_SESSION['keranjang'] as $key => $produk) {
-        if ($produk['kode_produk'] === $kode_produk) {
-            // Menghapus produk dari keranjang
-            unset($_SESSION['keranjang'][$key]);
-            $_SESSION['keranjang'] = array_values($_SESSION['keranjang']); // Reindex array
-            $produk_ditemukan = true;
-            break; // Keluar dari loop setelah produk ditemukan
-        }
-    }
-
-    // Jika produk ditemukan, redirect ke halaman keranjang
-    if ($produk_ditemukan) {
-        header("Location: keranjang.php");
-        exit;
+if (isset($_GET['id'])) {
+    $id = mysqli_real_escape_string($koneksi, $_GET['id']);
+    
+    // Hapus entri terkait di tabel detail_transaksi
+    $deleteDetailQuery = "DELETE FROM detail_transaksi WHERE produk_id = '$id'";
+    mysqli_query($koneksi, $deleteDetailQuery);
+    
+    // Query untuk menghapus produk berdasarkan ID
+    $query = "DELETE FROM produk WHERE id = '$id'";
+    
+    if (mysqli_query($koneksi, $query)) {
+        header("Location: data_produk.php");
     } else {
-        // Jika produk tidak ditemukan di keranjang
-        $_SESSION['error'] = "Produk tidak ditemukan di keranjang.";
-        header("Location: keranjang.php");
-        exit;
+        echo "Gagal menghapus produk!";
     }
 } else {
-    // Jika tidak ada kode produk atau session keranjang tidak ada
-    $_SESSION['error'] = "Terjadi kesalahan. Produk tidak dapat dihapus.";
-    header("Location: keranjang.php");
-    exit;
+    header("Location: data_produk.php");
 }
 ?>

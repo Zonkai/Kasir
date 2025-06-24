@@ -2,8 +2,8 @@
 session_start();
 include 'koneksi.php';
 
-// Ambil data produk dari database
-$query_produk = "SELECT * FROM produk";
+// Ambil data produk dari database dengan stok lebih dari 0
+$query_produk = "SELECT * FROM produk WHERE stok > 0";
 $result_produk = mysqli_query($koneksi, $query_produk);
 
 if (!$result_produk) {
@@ -27,6 +27,12 @@ if (isset($_POST['tambah_ke_keranjang'])) {
         die("Produk tidak ditemukan.");
     }
 
+    // Cek apakah stok mencukupi
+    if ($produk['stok'] < $jumlah) {
+        echo "<script>alert('Stok tidak mencukupi!'); window.location='transaksi.php';</script>";
+        exit();
+    }
+
     // Hitung subtotal
     $subtotal = $produk['harga'] * $jumlah;
 
@@ -39,15 +45,36 @@ if (isset($_POST['tambah_ke_keranjang'])) {
         'subtotal' => $subtotal
     );
 
-    // Jika keranjang sudah ada, tambahkan produk
+    // Jika keranjang sudah ada, periksa apakah produk sudah ada
     if (isset($_SESSION['keranjang'])) {
-        $_SESSION['keranjang'][] = $produk_keranjang;
+        $found = false;
+        foreach ($_SESSION['keranjang'] as &$item) {
+            if ($item['id'] == $produk_keranjang['id']) {
+                // Jika produk sudah ada, tambahkan jumlah dan subtotal
+                $item['jumlah'] += $produk_keranjang['jumlah'];
+                $item['subtotal'] += $produk_keranjang['subtotal'];
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            // Jika produk belum ada, tambahkan sebagai entri baru
+            $_SESSION['keranjang'][] = $produk_keranjang;
+        }
     } else {
+        // Jika keranjang belum ada, buat keranjang baru
         $_SESSION['keranjang'] = array($produk_keranjang);
     }
 
-    // Update total price
-    $_SESSION['total_harga'] = isset($_SESSION['total_harga']) ? $_SESSION['total_harga'] + $subtotal : $subtotal;
+    // Recalculate total price
+    $_SESSION['total_harga'] = array_sum(array_column($_SESSION['keranjang'], 'subtotal'));
+
+    // Update stok di database
+    $stok_baru = $produk['stok'] - $jumlah;
+    $query_update_stok = "UPDATE produk SET stok = ? WHERE id = ?";
+    $stmt_update = mysqli_prepare($koneksi, $query_update_stok);
+    mysqli_stmt_bind_param($stmt_update, "ii", $stok_baru, $produk_id);
+    mysqli_stmt_execute($stmt_update);
 
     echo "<script>alert('Produk berhasil ditambahkan ke keranjang.'); window.location='transaksi.php';</script>";
 }
@@ -111,6 +138,10 @@ if (isset($_POST['simpan'])) {
             $query_detail = "INSERT INTO detail_transaksi (transaksi_id, produk_id, jumlah, subtotal) 
                              VALUES ('$transaksi_id', '$produk_id', '$jumlah', '$subtotal')";
             mysqli_query($koneksi, $query_detail);
+
+            // Kurangi stok produk
+            $query_update_stok = "UPDATE produk SET stok = stok - '$jumlah' WHERE id = '$produk_id'";
+            mysqli_query($koneksi, $query_update_stok);
         }
 
         // Kosongkan keranjang setelah transaksi berhasil
@@ -136,6 +167,7 @@ $total_harga = isset($_SESSION['total_harga']) ? $_SESSION['total_harga'] : 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaksi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/style.css">
     <style>
         .text-white {
             color: white;
@@ -152,9 +184,13 @@ $total_harga = isset($_SESSION['total_harga']) ? $_SESSION['total_harga'] : 0;
                 display: none; /* Sembunyikan tombol dan form pada saat cetak */
             }
         }
+        body {
+            padding-left: 250px; /* Sesuaikan dengan lebar sidebar */
+        }
     </style>
 </head>
 <body>
+<?php include 'sidebar.php'; ?>
     <div class="container mt-5">
         <h3>Transaksi</h3>
 
@@ -176,7 +212,7 @@ $total_harga = isset($_SESSION['total_harga']) ? $_SESSION['total_harga'] : 0;
                         <td>Rp <?= number_format($produk['harga'], 0, ',', '.'); ?></td>
                         <td>
                             <form method="POST" action="transaksi.php">
-                                <input type="number" name="jumlah" value="1" min="1" class="form-control" required>
+                                <input type="number" name="jumlah" value="1" min="1" max="<?= $produk['stok']; ?>" class="form-control" required>
                                 <input type="hidden" name="produk_id" value="<?= $produk['id']; ?>">
                         </td>
                         <td>
@@ -228,19 +264,27 @@ $total_harga = isset($_SESSION['total_harga']) ? $_SESSION['total_harga'] : 0;
         </div>
 
         <!-- Tombol Aksi -->
-        <div class="d-flex justify-content-between mt-3">
-            <a href="dashboard.php" class="btn btn-warning">Kembali ke Dashboard</a>
-            
-            <div class="mx-auto">
-                <button class="btn btn-primary" onclick="window.print()">Cetak Transaksi</button>
-            </div>
-            
-            <form method="POST" action="transaksi.php" class="mt-3">
-            <button type="submit" name="simpan" class="btn btn-primary">Simpan Transaksi</button>
-        </form>
+        <div class="d-flex justify-content-start mt-3">
+            <form method="POST" action="cetak_transaksi.php" target="_blank">
+                <button type="submit" name="cetak" class="btn btn-primary me-2">Cetak</button>
+            </form>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('input[name="jumlah"]').forEach(input => {
+            input.addEventListener('input', function() {
+                const max = parseInt(this.max);
+                if (parseInt(this.value) > max) {
+                    this.value = max;
+                }
+            });
+        });
+
+        function openPrintWindow() {
+            var printWindow = window.open('cetak_transaksi.php', '_blank');
+        }
+    </script>
 </body>
 </html>
